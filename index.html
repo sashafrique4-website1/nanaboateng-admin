@@ -374,7 +374,11 @@ textarea{resize:vertical;}
     </div>
     <div class="fg"><label class="fl">Topic / Description</label><textarea class="ft" id="sp-topic" placeholder="What you spoke about..."></textarea></div>
     <div class="fg"><label class="fl">Location</label><input class="fi" id="sp-loc" placeholder="Accra, Ghana"/></div>
-    <div class="fg"><label class="fl">Proof Image URL (optional — photo from the event)</label><input class="fi" id="sp-img" placeholder="https://... photo of you on stage, at the event, etc." oninput="prevSpeakImg(this.value)"/>
+    <div class="fg"><label class="fl">Proof Image URL (optional — photo from the event)</label>
+      <div style="display:flex;gap:7px;">
+        <input class="fi" style="flex:1" id="sp-img" placeholder="https://... or paste Google Drive share link" oninput="autoConvertUrl(this);prevSpeakImg(this.value)"/>
+        <button class="btn btn-out btn-sm" onclick="autoConvertUrl(G('sp-img'));prevSpeakImg(V('sp-img'))">Convert</button>
+      </div>
       <p class="fh">Paste a public image URL showing you at this speaking event. Will appear as proof on your website.</p>
     </div>
     <div style="margin-bottom:12px;"><div class="prev-box" id="sp-prev" style="width:160px;height:90px;"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--light)">No image</div></div></div>
@@ -412,8 +416,12 @@ textarea{resize:vertical;}
       <div class="fg"><label class="fl">Book Title</label><input class="fi" id="bk-title" placeholder="Your book title..."/></div>
       <div class="fg"><label class="fl">Subtitle / Tagline</label><input class="fi" id="bk-sub" placeholder="Subtitle or tagline..."/></div>
     </div>
-    <div class="fg"><label class="fl">Cover Image URL</label><input class="fi" id="bk-cover" placeholder="https://..." oninput="prevCover(this.value)"/>
-      <p class="fh">Public URL to your book cover image.</p>
+    <div class="fg"><label class="fl">Cover Image URL</label>
+      <div style="display:flex;gap:7px;">
+        <input class="fi" style="flex:1" id="bk-cover" placeholder="https://... or paste Google Drive share link" oninput="autoConvertUrl(this);prevCover(this.value)"/>
+        <button class="btn btn-out btn-sm" onclick="autoConvertUrl(G('bk-cover'));prevCover(V('bk-cover'));toast('URL converted!')">Convert</button>
+      </div>
+      <p class="fh">Paste any image URL <strong>or</strong> a Google Drive share link — it will be converted automatically. To get a Drive link: right-click your image file → Share → "Anyone with link" → Copy link.</p>
     </div>
     <div style="display:flex;gap:10px;margin-bottom:12px;">
       <div class="prev-box" id="bk-prev" style="width:80px;height:110px;border-radius:4px;"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--light);">Cover</div></div>
@@ -448,7 +456,13 @@ textarea{resize:vertical;}
     <div class="fg"><label class="fl">Subtitle / Teaser</label><input class="fi" id="bl-sub" placeholder="One-line summary..."/></div>
     <div class="fg"><label class="fl">Read Time</label><input class="fi" id="bl-rt" placeholder="e.g. 6 min read"/></div>
     <div class="gr2">
-      <div class="fg"><label class="fl">Cover Image URL (optional)</label><input class="fi" id="bl-img" placeholder="https://... (leave blank for styled gradient cover)" oninput="prevBlogImg(this.value)"/><p class="fh">Paste a public image URL for the blog post cover. Google Drive: share → use https://drive.google.com/uc?export=view&amp;id=FILE_ID</p></div>
+      <div class="fg"><label class="fl">Cover Image URL (optional)</label>
+        <div style="display:flex;gap:7px;">
+          <input class="fi" style="flex:1" id="bl-img" placeholder="https://... or paste Google Drive share link" oninput="autoConvertUrl(this);prevBlogImg(this.value)"/>
+          <button class="btn btn-out btn-sm" onclick="autoConvertUrl(G('bl-img'));prevBlogImg(V('bl-img'))">Convert</button>
+        </div>
+        <p class="fh">Paste any image URL or a Google Drive share link — auto-converted to a working embed URL.</p>
+      </div>
       <div class="fg"><label class="fl">Cover Background Word (used if no image)</label><input class="fi" id="bl-bgtext" placeholder="AFRICA"/></div>
     </div>
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
@@ -732,6 +746,20 @@ function prevImg(u) {
   const b = G('g-prev');
   b.innerHTML = u ? `<img src="${e(u)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--border)">?</div>';
 }
+function autoConvertUrl(inputEl) {
+  if (!inputEl) return;
+  let url = inputEl.value.trim();
+  // Google Drive file/d/ format
+  const m1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m1) { inputEl.value = 'https://drive.google.com/uc?export=view&id=' + m1[1]; return; }
+  // Google Drive open?id= format
+  const m2 = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+  if (m2) { inputEl.value = 'https://drive.google.com/uc?export=view&id=' + m2[1]; return; }
+  // Google Drive uc?id= (missing export param)
+  const m3 = url.match(/drive\.google\.com\/uc\?id=([a-zA-Z0-9_-]+)/);
+  if (m3) { inputEl.value = 'https://drive.google.com/uc?export=view&id=' + m3[1]; return; }
+}
+
 function prevBlogImg(u) {
   const b = G('bl-prev');
   if (!b) return;
