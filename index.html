@@ -374,6 +374,10 @@ textarea{resize:vertical;}
     </div>
     <div class="fg"><label class="fl">Topic / Description</label><textarea class="ft" id="sp-topic" placeholder="What you spoke about..."></textarea></div>
     <div class="fg"><label class="fl">Location</label><input class="fi" id="sp-loc" placeholder="Accra, Ghana"/></div>
+    <div class="fg"><label class="fl">Proof Image URL (optional — photo from the event)</label><input class="fi" id="sp-img" placeholder="https://... photo of you on stage, at the event, etc." oninput="prevSpeakImg(this.value)"/>
+      <p class="fh">Paste a public image URL showing you at this speaking event. Will appear as proof on your website.</p>
+    </div>
+    <div style="margin-bottom:12px;"><div class="prev-box" id="sp-prev" style="width:160px;height:90px;"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--light)">No image</div></div></div>
     <div class="save-row"><button class="btn btn-gold btn-sm" onclick="addSpeaking()">Add Speaking Event</button><span class="msg" id="m-speak-add"></span></div>
   </div>
   <div class="card"><div class="card-h">All Speaking Engagements</div>
@@ -443,7 +447,13 @@ textarea{resize:vertical;}
     </div>
     <div class="fg"><label class="fl">Subtitle / Teaser</label><input class="fi" id="bl-sub" placeholder="One-line summary..."/></div>
     <div class="fg"><label class="fl">Read Time</label><input class="fi" id="bl-rt" placeholder="e.g. 6 min read"/></div>
-    <div class="fg"><label class="fl">Cover Background Text (large watermark word, e.g. AFRICA)</label><input class="fi" id="bl-bgtext" placeholder="AFRICA"/></div>
+    <div class="gr2">
+      <div class="fg"><label class="fl">Cover Image URL (optional)</label><input class="fi" id="bl-img" placeholder="https://... (leave blank for styled gradient cover)" oninput="prevBlogImg(this.value)"/><p class="fh">Paste a public image URL for the blog post cover. Google Drive: share → use https://drive.google.com/uc?export=view&amp;id=FILE_ID</p></div>
+      <div class="fg"><label class="fl">Cover Background Word (used if no image)</label><input class="fi" id="bl-bgtext" placeholder="AFRICA"/></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
+      <div class="prev-box" id="bl-prev" style="width:120px;height:70px;"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--light)">No image</div></div>
+    </div>
     <div class="fg"><label class="fl">Article Body (HTML supported)</label><textarea class="ft" style="min-height:200px" id="bl-body" placeholder="Write your article. You can use &lt;p&gt;, &lt;h3&gt;, &lt;strong&gt;, &lt;em&gt; tags..."></textarea></div>
     <div class="save-row"><button class="btn btn-gold btn-sm" onclick="addPost()">Save Post</button><span class="msg" id="m-blog-add"></span></div>
   </div>
@@ -722,6 +732,16 @@ function prevImg(u) {
   const b = G('g-prev');
   b.innerHTML = u ? `<img src="${e(u)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--border)">?</div>';
 }
+function prevBlogImg(u) {
+  const b = G('bl-prev');
+  if (!b) return;
+  b.innerHTML = u ? `<img src="${e(u)}" style="width:100%;height:100%;object-fit:cover;border-radius:4px" onerror="this.style.display='none'">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--light)">No image</div>';
+}
+function prevSpeakImg(u) {
+  const b = G('sp-prev');
+  if (!b) return;
+  b.innerHTML = u ? `<img src="${e(u)}" style="width:100%;height:100%;object-fit:cover;border-radius:4px" onerror="this.style.display='none'">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--light)">No image</div>';
+}
 function prevCover(u) {
   const b = G('bk-prev');
   b.innerHTML = u ? `<img src="${e(u)}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--light)">Cover</div>';
@@ -752,11 +772,15 @@ function renderGal() {
 async function addPost() {
   const title = V('bl-title');
   if (!title) { toast('Enter a title.'); return; }
-  const post = {id:'post-'+Date.now(), title, subtitle:V('bl-sub'), category:V('bl-cat'), body:V('bl-body'), readTime:V('bl-rt'), bgText:V('bl-bgtext'), date:new Date().toISOString()};
+  const post = {id:'post-'+Date.now(), title, subtitle:V('bl-sub'), category:V('bl-cat'), body:V('bl-body'), readTime:V('bl-rt'), bgText:V('bl-bgtext'), coverImg:V('bl-img'), date:new Date().toISOString()};
   if (SU) { try { const r = await api({action:'addBlog', ...post}); if (r.id) post.id = r.id; } catch {} }
   BLOG.push(post); ls('nb_blog', BLOG); renderBlog(); updateDash();
-  ['bl-title','bl-sub','bl-body','bl-rt','bl-bgtext'].forEach(id => G(id).value = '');
-  msg(G('m-blog-add'), 'Saved ✓'); toast('Blog post saved!');
+  ['bl-title','bl-sub','bl-body','bl-rt','bl-bgtext','bl-img'].forEach(id => G(id).value = '');
+  prevBlogImg('');
+  // Generate shareable link
+  const link = 'https://nanaboateng.com/?p=' + post.id;
+  msg(G('m-blog-add'), 'Saved ✓ — Share: ' + link.replace('https://',''));
+  toast('Blog post saved! Shareable link ready.');
 }
 async function delPost(id) {
   if (!confirm('Delete this post?')) return;
@@ -767,17 +791,32 @@ async function delPost(id) {
 function renderBlog() {
   const el = G('blog-list');
   if (!BLOG.length) { el.innerHTML = '<div class="empty">No posts saved yet.</div>'; return; }
-  el.innerHTML = BLOG.map(p => `<div class="li"><div class="li-info"><div class="li-title">${e(p.title)}</div><div class="li-meta">${e(p.category||'')} · ${p.date ? new Date(p.date).toLocaleDateString() : ''}</div></div><div class="li-actions"><button class="btn btn-red btn-xs" onclick="delPost('${e(p.id)}')">Delete</button></div></div>`).join('');
+  el.innerHTML = [...BLOG].reverse().map(p => {
+    const shareLink = 'nanaboateng.com/?p=' + p.id;
+    return `<div class="li">
+      ${p.coverImg ? `<div style="width:60px;height:44px;border-radius:5px;overflow:hidden;flex-shrink:0"><img src="${e(p.coverImg)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'"></div>` : ''}
+      <div class="li-info">
+        <div class="li-title">${e(p.title)}</div>
+        <div class="li-meta">${e(p.category||'')} · ${p.date ? new Date(p.date).toLocaleDateString() : ''}</div>
+        <div class="li-meta" style="color:var(--gold);font-size:10px;margin-top:3px">🔗 ${shareLink}</div>
+      </div>
+      <div class="li-actions">
+        <button class="btn btn-out btn-xs" onclick="navigator.clipboard.writeText('https://nanaboateng.com/?p=' + p.id);toast('Link copied!')">Copy link</button>
+        <button class="btn btn-red btn-xs" onclick="delPost('${e(p.id)}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ═══ SPEAKING ════════════════════════════════════════════════════════
 async function addSpeaking() {
   const event = V('sp-event');
   if (!event) { toast('Enter event name.'); return; }
-  const item = {id:'sp-'+Date.now(), year:V('sp-year'), event, topic:V('sp-topic'), location:V('sp-loc')};
+  const item = {id:'sp-'+Date.now(), year:V('sp-year'), event, topic:V('sp-topic'), location:V('sp-loc'), images:V('sp-img')};
   if (SU) { try { const r = await api({action:'addSpeaking', ...item}); if (r.id) item.id = r.id; } catch {} }
   SPEAK.push(item); ls('nb_speak', SPEAK); renderSpeak(); updateDash();
-  ['sp-year','sp-event','sp-topic','sp-loc'].forEach(id => G(id).value = '');
+  ['sp-year','sp-event','sp-topic','sp-loc','sp-img'].forEach(id => G(id).value = '');
+  prevSpeakImg('');
   msg(G('m-speak-add'), 'Added ✓'); toast('Speaking event added!');
 }
 async function delSpeak(id) {
@@ -789,7 +828,11 @@ async function delSpeak(id) {
 function renderSpeak() {
   const el = G('speak-list');
   if (!SPEAK.length) { el.innerHTML = '<div class="empty">No speaking events yet.</div>'; return; }
-  el.innerHTML = [...SPEAK].reverse().map(s => `<div class="li"><div class="li-info"><div class="li-title">${e(s.year||'')} — ${e(s.event)}</div><div class="li-meta">${e(s.location||'')}${s.topic ? ' · ' + s.topic.slice(0,70) : ''}</div></div><div class="li-actions"><button class="btn btn-red btn-xs" onclick="delSpeak('${e(s.id)}')">Remove</button></div></div>`).join('');
+  el.innerHTML = [...SPEAK].reverse().map(s => `<div class="li" style="align-items:center">
+    ${s.images ? `<div style="width:60px;height:44px;border-radius:5px;overflow:hidden;flex-shrink:0"><img src="${e(s.images)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'"></div>` : ''}
+    <div class="li-info"><div class="li-title">${e(s.year||'')} — ${e(s.event)}</div><div class="li-meta">${e(s.location||'')}${s.topic ? ' · ' + s.topic.slice(0,60) : ''}${s.images ? ' · 📷 photo' : ''}</div></div>
+    <div class="li-actions"><button class="btn btn-red btn-xs" onclick="delSpeak('${e(s.id)}')">Remove</button></div>
+  </div>`).join('');
 }
 
 // ═══ EVENTS ══════════════════════════════════════════════════════════
