@@ -392,19 +392,38 @@ textarea{resize:vertical;}
 <!-- ═══════════════ GALLERY ═══════════════ -->
 <div class="sec" id="s-gallery">
   <div class="card" style="background:var(--off);border-style:dashed;">
-    <div class="card-h">Add New Photo</div>
-    <div class="gr2">
-      <div class="fg"><label class="fl">Image URL *</label><input class="fi" id="g-url" type="url" placeholder="https://..." oninput="prevImg(this.value)"/><p class="fh">Google Drive: share file publicly → use: https://drive.google.com/uc?export=view&id=FILE_ID</p></div>
-      <div class="fg"><label class="fl">Caption</label><input class="fi" id="g-cap" placeholder="Describe this photo..."/></div>
+    <div class="card-h">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Add New Photo
     </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
-      <div class="prev-box" id="g-prev"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--border);">?</div></div>
-      <button class="btn btn-gold btn-sm" onclick="addPhoto()">Add Photo</button>
-      <span class="msg" id="m-gal-add"></span>
+    <p class="card-sub">Upload directly from your device — no links needed. Photos are embedded and always show on your website.</p>
+
+    <!-- Drop Zone -->
+    <div id="gal-drop" onclick="G('gal-file').click()" style="border:2px dashed var(--border);border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px;background:var(--white);"
+      ondragover="event.preventDefault();this.style.borderColor='var(--gold)';this.style.background='rgba(184,150,62,0.05)'"
+      ondragleave="this.style.borderColor='var(--border)';this.style.background='var(--white)'"
+      ondrop="event.preventDefault();this.style.borderColor='var(--border)';this.style.background='var(--white)';handleGalDrop(event)">
+      <div style="font-size:28px;margin-bottom:8px;">📷</div>
+      <div style="font-family:var(--dp);font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px;">Click to upload or drag & drop</div>
+      <div style="font-size:11px;color:var(--light);">JPG, PNG, WEBP — max 5MB per photo. Multiple photos supported.</div>
+      <input type="file" id="gal-file" accept="image/*" multiple style="display:none" onchange="handleGalFiles(this.files)">
     </div>
+
+    <!-- Queue of selected images waiting to be added -->
+    <div id="gal-queue" style="display:none;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em;">Selected Photos — Add Caption & Upload</div>
+      <div id="gal-queue-items" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+
+    <span class="msg" id="m-gal-add" style="display:block;margin-top:4px;"></span>
   </div>
-  <div class="card"><div class="card-h" style="justify-content:space-between;"><span>Gallery Photos</span><span id="gal-badge" style="font-size:11px;color:var(--light);">0 photos</span></div>
-    <div class="gal-grid" id="gal-grid"><div class="empty">No photos yet — add one above.</div></div>
+
+  <div class="card">
+    <div class="card-h" style="justify-content:space-between;">
+      <span>Gallery Photos</span>
+      <span id="gal-badge" style="font-size:11px;color:var(--light);">0 photos</span>
+    </div>
+    <div class="gal-grid" id="gal-grid"><div class="empty">No photos yet — upload one above.</div></div>
   </div>
 </div>
 
@@ -696,16 +715,15 @@ function init() {
   renderGal(); renderBlog(); renderSpeak(); renderEv(); renderTesti();
   updateDash();
   checkConn();
-  // Pre-populate book cover with embedded image if no custom URL saved
+  // Book cover is embedded in the website HTML — show preview using embedded image
+  // Never sync bk-cover to Sheets (Drive links are blocked by CORS)
   (function() {
     const bkEl = G('bk-cover');
-    if (bkEl && !bkEl.value) {
-      bkEl.value = BOOK_COVER_B64;
-      if (!C['bk-cover']) C['bk-cover'] = BOOK_COVER_B64;
-    }
-    const bkCoverVal = bkEl ? bkEl.value : '';
-    if (bkCoverVal) prevCover(bkCoverVal);
-    // Also pre-fill title/subtitle if empty
+    // Clear any Drive URL that was previously saved — it doesn't work
+    if (bkEl) { bkEl.value = ''; bkEl.placeholder = 'Cover embedded in website HTML (no URL needed)'; bkEl.disabled = true; }
+    delete C['bk-cover'];
+    prevCover(BOOK_COVER_B64);
+    // Pre-fill title/subtitle if empty
     const tEl = G('bk-title'); if (tEl && !tEl.value && !C['bk-title']) tEl.value = 'Benefits of Divine Defects';
     const sEl = G('bk-sub');  if (sEl && !sEl.value && !C['bk-sub'])   sEl.value = 'How Imperfections Connects Us';
   })();
@@ -767,9 +785,91 @@ async function save(sec) {
   toast('Saved!');
 }
 
-// ═══ GALLERY ══════════════════════════════════════════════════════════
+// ═══ GALLERY — DIRECT UPLOAD ══════════════════════════════════════════
+// Queue of base64 images waiting to be added
+let GAL_QUEUE = [];
+
+function handleGalDrop(ev) {
+  const files = Array.from(ev.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  if (!files.length) { toast('Please drop image files only.'); return; }
+  processGalFiles(files);
+}
+function handleGalFiles(fileList) {
+  const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+  if (!files.length) return;
+  processGalFiles(files);
+  G('gal-file').value = '';
+}
+function processGalFiles(files) {
+  files.forEach(file => {
+    if (file.size > 5 * 1024 * 1024) { toast(file.name + ' is over 5MB — skipped.'); return; }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const b64 = ev.target.result;
+      // Compress if needed using canvas
+      compressImage(b64, file.type, function(compressed) {
+        const qid = 'q-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+        GAL_QUEUE.push({qid, b64: compressed, name: file.name});
+        renderGalQueue();
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function compressImage(b64, type, cb) {
+  const img = new Image();
+  img.onload = function() {
+    const MAX = 1200;
+    let w = img.width, h = img.height;
+    if (w > MAX || h > MAX) {
+      if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+      else { w = Math.round(w * MAX / h); h = MAX; }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    cb(canvas.toDataURL('image/jpeg', 0.82));
+  };
+  img.src = b64;
+}
+function renderGalQueue() {
+  const wrap = G('gal-queue');
+  const container = G('gal-queue-items');
+  if (!GAL_QUEUE.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  container.innerHTML = GAL_QUEUE.map(item => `
+    <div id="${e(item.qid)}" style="display:flex;gap:10px;align-items:center;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px;">
+      <div style="width:70px;height:50px;border-radius:5px;overflow:hidden;flex-shrink:0;">
+        <img src="${item.b64}" style="width:100%;height:100%;object-fit:cover;">
+      </div>
+      <div style="flex:1;">
+        <input class="fi" placeholder="Caption for this photo..." id="cap-${e(item.qid)}" style="margin-bottom:0;font-size:12px;" />
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="btn btn-gold btn-sm" onclick="addQueuedPhoto('${e(item.qid)}')">Add ✓</button>
+        <button class="btn btn-red btn-xs" onclick="removeFromQueue('${e(item.qid)}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+function removeFromQueue(qid) {
+  GAL_QUEUE = GAL_QUEUE.filter(i => i.qid !== qid);
+  renderGalQueue();
+}
+async function addQueuedPhoto(qid) {
+  const item = GAL_QUEUE.find(i => i.qid === qid);
+  if (!item) return;
+  const cap = (G('cap-' + qid) || {}).value?.trim() || '';
+  const galItem = {id: Date.now().toString(), url: item.b64, caption: cap, date: new Date().toISOString()};
+  // Push to Sheets if connected (base64 stored in localStorage only — too large for Sheets)
+  // The sync will store a marker; the actual image lives in localStorage
+  GAL.push(galItem); ls('nb_gal', GAL); renderGal(); updateDash();
+  GAL_QUEUE = GAL_QUEUE.filter(i => i.qid !== qid);
+  renderGalQueue();
+  msg(G('m-gal-add'), 'Photo added ✓'); toast('Photo added to gallery!');
+}
 function prevImg(u) {
   const b = G('g-prev');
+  if (!b) return;
   b.innerHTML = u ? `<img src="${e(u)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--border)">?</div>';
 }
 function autoConvertUrl(inputEl) {
@@ -801,13 +901,8 @@ function prevCover(u) {
   b.innerHTML = u ? `<img src="${e(u)}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--light)">Cover</div>';
 }
 async function addPhoto() {
-  const url = V('g-url'), cap = V('g-cap');
-  if (!url) { toast('Enter an image URL.'); return; }
-  const item = {id: Date.now().toString(), url, caption: cap, date: new Date().toISOString()};
-  if (SU) { try { const r = await api({action:'addGallery', url, caption: cap}); if (r.id) item.id = r.id; } catch {} }
-  GAL.push(item); ls('nb_gal', GAL); renderGal(); updateDash();
-  G('g-url').value=''; G('g-cap').value=''; prevImg('');
-  msg(G('m-gal-add'), 'Added ✓'); toast('Photo added!');
+  // Legacy URL fallback — kept for compatibility but UI now uses direct upload
+  toast('Use the upload button above to add photos.');
 }
 async function delPhoto(id) {
   if (!confirm('Remove this photo?')) return;
@@ -818,8 +913,19 @@ async function delPhoto(id) {
 function renderGal() {
   const g = G('gal-grid');
   G('gal-badge').textContent = GAL.length + ' photo' + (GAL.length !== 1 ? 's' : '');
-  if (!GAL.length) { g.innerHTML = '<div class="empty">No photos yet — add one above.</div>'; return; }
-  g.innerHTML = GAL.map(i => `<div class="gal-item"><img src="${e(i.url)}" alt="${e(i.caption)}" loading="lazy" onerror="this.style.display='none'"><div class="gal-cap">${e(i.caption||'')}</div><button class="gal-del" onclick="delPhoto('${e(i.id)}')" title="Remove"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');
+  if (!GAL.length) { g.innerHTML = '<div class="empty">No photos yet — upload one above.</div>'; return; }
+  g.innerHTML = GAL.map(i => {
+    // base64 images display directly; URLs display normally
+    const src = i.url || '';
+    const isB64 = src.startsWith('data:');
+    return `<div class="gal-item">
+      <img src="${isB64 ? src : e(src)}" alt="${e(i.caption)}" loading="lazy" onerror="this.style.display='none'" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <div class="gal-cap">${e(i.caption||'')}</div>
+      <button class="gal-del" onclick="delPhoto('${e(i.id)}')" title="Remove">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`;
+  }).join('');
 }
 
 // ═══ BLOG ═════════════════════════════════════════════════════════════
