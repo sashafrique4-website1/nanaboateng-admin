@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Nana Boateng — Admin Panel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23111110' rx='6'/><text x='16' y='23' text-anchor='middle' fill='%23B8963E' font-family='Georgia,serif' font-weight='900' font-size='17'>NB</text></svg>" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#111110;--gold:#B8963E;--gl:rgba(184,150,62,0.12);--gm:rgba(184,150,62,0.3);
+  --white:#fff;--off:#F7F6F3;--stone:#EEECE8;--border:#E2E0DC;
+  --text:#2C2B29;--mid:#6B6862;--light:#9A9690;
+  --sw:230px;--r:10px;--dp:'Plus Jakarta Sans',sans-serif;--bd:'Inter',sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+html,body{height:100%;font-family:var(--bd);font-size:14px;color:var(--text);background:var(--off);}
+a{text-decoration:none;color:inherit;}
+textarea{resize:vertical;}
+
+/* LOGIN */
+#login{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:999;}
+.lb{background:#1c1c1b;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:44px 40px;width:100%;max-width:380px;text-align:center;}
+.lb-logo{width:50px;height:50px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-family:var(--dp);font-weight:900;font-size:18px;color:var(--ink);}
+.lb h1{font-family:var(--dp);font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;}
+.lb p{font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:28px;}
+.lb input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:11px 14px;color:#fff;font-size:13px;outline:none;transition:border-color .2s;margin-bottom:10px;}
+.lb input:focus{border-color:var(--gold);}
+.lb input::placeholder{color:rgba(255,255,255,0.25);}
+.lb button{width:100%;background:var(--gold);color:var(--ink);border:none;border-radius:8px;padding:12px;font-family:var(--dp);font-weight:700;font-size:13px;cursor:pointer;}
+.lb .err{color:#f87171;font-size:11px;margin-top:6px;display:none;}
+.lb .hint{font-size:10px;color:rgba(255,255,255,0.18);margin-top:18px;}
+
+/* LAYOUT */
+#app{display:none;height:100vh;overflow:hidden;}
+#sb{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:var(--ink);display:flex;flex-direction:column;z-index:50;overflow-y:auto;}
+#main{margin-left:var(--sw);height:100vh;overflow-y:auto;}
+
+/* SIDEBAR */
+.sb-brand{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.sb-logo{display:flex;align-items:center;gap:9px;}
+.sb-mark{width:34px;height:34px;background:var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--dp);font-weight:900;font-size:13px;color:var(--ink);flex-shrink:0;}
+.sb-name{font-family:var(--dp);font-size:12px;font-weight:700;color:#fff;line-height:1.2;}
+.sb-sub{font-size:9px;color:rgba(255,255,255,0.3);display:block;}
+.sb-nav{flex:1;padding:12px 10px;}
+.sb-cat{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.22);padding:14px 8px 6px;}
+.sb-btn{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.5);cursor:pointer;transition:all .15s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left;}
+.sb-btn:hover{color:#fff;background:rgba(255,255,255,0.06);}
+.sb-btn.on{color:var(--gold);background:var(--gl);}
+.sb-btn svg{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.sb-foot{padding:14px;border-top:1px solid rgba(255,255,255,0.07);}
+.sb-foot a{display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(255,255,255,0.3);padding:7px;border-radius:6px;transition:color .2s;}
+.sb-foot a:hover{color:rgba(255,255,255,0.6);}
+.sb-foot svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;}
+
+/* HEADER */
+.mh{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.mh h1{font-family:var(--dp);font-size:15px;font-weight:700;color:var(--ink);}
+.mh-right{display:flex;align-items:center;gap:8px;}
+#sync-time{font-size:11px;color:var(--light);}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border-radius:7px;font-family:var(--dp);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;border:none;display:inline-flex;align-items:center;gap:5px;}
+.btn-gold{background:var(--gold);color:var(--ink);}
+.btn-gold:hover{opacity:.9;}
+.btn-out{background:none;border:1.5px solid var(--border);color:var(--mid);}
+.btn-out:hover{border-color:var(--text);color:var(--ink);}
+.btn-red{background:#fee2e2;color:#dc2626;}
+.btn-red:hover{background:#fecaca;}
+.btn-sm{padding:6px 12px;font-size:11px;}
+.btn-xs{padding:4px 9px;font-size:10px;}
+
+/* BODY */
+.mb{padding:24px 28px;}
+.sec{display:none;}
+.sec.on{display:block;}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;}
+.card-h{font-family:var(--dp);font-size:13px;font-weight:700;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.card-h svg{width:14px;height:14px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;}
+.card-sub{font-size:11px;color:var(--light);margin-bottom:14px;line-height:1.6;}
+
+/* FORM */
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.fl{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:.02em;}
+.fi,.ft,.fs{background:var(--off);border:1.5px solid var(--border);border-radius:7px;padding:9px 11px;font-family:var(--bd);font-size:13px;color:var(--text);outline:none;transition:border-color .2s;width:100%;}
+.fi:focus,.ft:focus{border-color:var(--gold);background:var(--white);}
+.ft{min-height:80px;}
+.fh{font-size:10px;color:var(--light);margin-top:4px;line-height:1.5;}
+.gr2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.gr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.save-row{display:flex;align-items:center;gap:10px;margin-top:4px;}
+.msg{font-size:11px;color:var(--mid);opacity:0;transition:opacity .3s;}
+.msg.show{opacity:1;}
+
+/* TABS */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.tab{padding:9px 14px;font-family:var(--dp);font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--mid);border-bottom:2px solid transparent;margin-bottom:-1px;}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold);}
+.tp{display:none;}
+.tp.on{display:block;}
+
+/* LIST ITEMS */
+.li-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.li{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.li-info{flex:1;min-width:0;}
+.li-title{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.li-meta{font-size:11px;color:var(--light);margin-top:2px;}
+.li-actions{display:flex;gap:5px;flex-shrink:0;}
+.empty{text-align:center;padding:32px;color:var(--light);font-size:12px;background:var(--off);border-radius:8px;border:1px dashed var(--border);}
+
+/* GALLERY GRID */
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px;}
+.gal-item{position:relative;border-radius:8px;overflow:hidden;background:var(--border);aspect-ratio:4/3;}
+.gal-item img{width:100%;height:100%;object-fit:cover;display:block;}
+.gal-cap{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:16px 8px 7px;font-size:10px;color:#fff;}
+.gal-del{position:absolute;top:5px;right:5px;width:24px;height:24px;background:rgba(220,38,38,0.9);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;}
+.gal-item:hover .gal-del{opacity:1;}
+.gal-del svg{width:10px;height:10px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;}
+
+/* DASHBOARD */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:20px;}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;}
+.stat-n{font-family:var(--dp);font-size:24px;font-weight:800;color:var(--ink);line-height:1;}
+.stat-l{font-size:11px;color:var(--light);margin-top:3px;}
+.setup-bar{background:linear-gradient(135deg,#1a1a19,#2a2310);border-radius:var(--r);padding:20px;margin-bottom:16px;border:1px solid rgba(184,150,62,0.2);}
+.setup-bar h3{font-family:var(--dp);font-weight:700;color:#fff;font-size:14px;margin-bottom:5px;}
+.setup-bar p{font-size:11px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:10px;}
+
+/* SETTINGS */
+.code-wrap{background:#1a1a19;border-radius:8px;padding:16px;position:relative;margin-bottom:12px;}
+.code-wrap pre{font-family:'Courier New',monospace;font-size:11px;color:#d4d4d4;white-space:pre-wrap;line-height:1.6;overflow-x:auto;}
+.copy-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.1);border:none;border-radius:5px;padding:4px 9px;color:rgba(255,255,255,0.6);font-size:10px;cursor:pointer;}
+.copy-btn:hover{background:rgba(255,255,255,0.2);color:#fff;}
+.conn{display:flex;align-items:center;gap:7px;margin-bottom:12px;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--border);}
+.dot.ok{background:#22c55e;}
+.dot.err{background:#ef4444;}
+.dot.chk{background:#eab308;animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.steps{list-style:none;padding:0;counter-reset:s;}
+.steps li{counter-increment:s;display:flex;gap:12px;margin-bottom:14px;}
+.steps li::before{content:counter(s);display:flex;align-items:center;justify-content:center;min-width:24px;height:24px;background:var(--gl);color:var(--gold);border:1px solid var(--gm);border-radius:50%;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;}
+.steps li p{font-size:12px;line-height:1.6;color:var(--mid);}
+.steps li strong{color:var(--ink);}
+
+/* PREVIEW BOX */
+.prev-box{width:56px;height:56px;border-radius:7px;background:var(--border);overflow:hidden;flex-shrink:0;}
+.prev-box img{width:100%;height:100%;object-fit:cover;}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:11px 18px;border-radius:8px;font-size:12px;z-index:9999;transform:translateY(60px);opacity:0;transition:all .3s var(--ease);border-left:3px solid var(--gold);}
+#toast.show{transform:translateY(0);opacity:1;}
+
+@media(max-width:768px){#sb{transform:translateX(-100%);transition:transform .3s}#sb.open{transform:translateX(0)}#main{margin-left:0}.gr2,.gr3{grid-template-columns:1fr}.mb{padding:16px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lb">
+    <div class="lb-logo">NB</div>
+    <h1>Admin Panel</h1>
+    <p>nanaboateng.com — Website Manager</p>
+    <input type="password" id="lpw" placeholder="Enter admin password"/>
+    <p class="err" id="lerr">Wrong password. Try again.</p>
+    <button onclick="login()">Sign In →</button>
+    <p class="hint">Default password: naboat2024 (change in Settings)</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- Sidebar -->
+  <nav id="sb">
+    <div class="sb-brand">
+      <div class="sb-logo">
+        <div class="sb-mark">NB</div>
+        <div><span class="sb-name">Nana Boateng</span><span class="sb-sub">Admin · nanaboateng.com</span></div>
+      </div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-cat">Overview</div>
+      <button class="sb-btn on" data-s="dash" onclick="go('dash',this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</button>
+      <div class="sb-cat">Edit Website</div>
+      <button class="sb-btn" data-s="hero" onclick="go('hero',this)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Hero</button>
+      <button class="sb-btn" data-s="about" onclick="go('about',this)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>About</button>
+      <button class="sb-btn" data-s="svcs" onclick="go('svcs',this)"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Services</button>
+      <button class="sb-btn" data-s="work" onclick="go('work',this)"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Featured Work</button>
+      <button class="sb-btn" data-s="speaking" onclick="go('speaking',this)"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Speaking</button>
+      <button class="sb-btn" data-s="gallery" onclick="go('gallery',this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Gallery</button>
+      <button class="sb-btn" data-s="book" onclick="go('book',this)"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Book</button>
+      <button class="sb-btn" data-s="blog" onclick="go('blog',this)"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Blog / Insights</button>
+      <button class="sb-btn" data-s="events" onclick="go('events',this)"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Events</button>
+      <button class="sb-btn" data-s="testimonials" onclick="go('testimonials',this)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Testimonials</button>
+      <button class="sb-btn" data-s="contact" onclick="go('contact',this)"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Contact & Footer</button>
+      <div class="sb-cat">System</div>
+      <button class="sb-btn" data-s="settings" onclick="go('settings',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button>
+    </div>
+    <div class="sb-foot">
+      <a href="https://nanaboateng.com" target="_blank"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>View Live Site</a>
+      <a href="#" onclick="logout();return false"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</a>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div id="main">
+    <div class="mh">
+      <h1 id="pt">Dashboard</h1>
+      <div class="mh-right">
+        <span id="sync-time"></span>
+        <button class="btn btn-out btn-sm" onclick="pullFromSheets()">↓ Pull</button>
+        <button class="btn btn-gold btn-sm" onclick="syncAll()" id="sync-btn">↑ Sync to Website</button>
+      </div>
+    </div>
+    <div class="mb">
+
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<div class="sec on" id="s-dash">
+  <div id="setup-wrap"></div>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-n" id="ds-gal">–</div><div class="stat-l">Gallery Photos</div></div>
+    <div class="stat"><div class="stat-n" id="ds-blog">–</div><div class="stat-l">Blog Posts</div></div>
+    <div class="stat"><div class="stat-n" id="ds-speak">–</div><div class="stat-l">Speaking Events</div></div>
+    <div class="stat"><div class="stat-n" id="ds-testi">–</div><div class="stat-l">Testimonials</div></div>
+    <div class="stat"><div class="stat-n" id="ds-events">–</div><div class="stat-l">Upcoming Events</div></div>
+    <div class="stat"><div class="stat-n" id="ds-conn" style="font-size:12px">–</div><div class="stat-l">Sheets Status</div></div>
+  </div>
+  <div class="card"><div class="card-h">Quick Actions</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;">
+      <button class="btn btn-out" onclick="go('gallery',qb('gallery'))">+ Gallery Photo</button>
+      <button class="btn btn-out" onclick="go('hero',qb('hero'))">✏ Edit Hero</button>
+      <button class="btn btn-out" onclick="go('book',qb('book'))">📚 Edit Book</button>
+      <button class="btn btn-out" onclick="go('testimonials',qb('testimonials'))">+ Testimonial</button>
+      <button class="btn btn-out" onclick="go('events',qb('events'))">+ Event</button>
+      <button class="btn btn-out" onclick="go('blog',qb('blog'))">+ Blog Post</button>
+    </div>
+  </div>
+  <div class="card"><div class="card-h">How changes go live</div>
+    <div class="steps"><li><p><strong>Edit any section</strong> using the left sidebar — Hero, About, Book, Gallery, Events, etc.</p></li><li><p><strong>Click "Save"</strong> inside each section to store your changes.</p></li><li><p><strong>Click "↑ Sync to Website"</strong> (top right) to push all saved changes to Google Sheets — your live website reads from Sheets automatically.</p></li><li><p>First time? Go to <strong>Settings</strong> and follow the 4-step Google Apps Script guide.</p></li></div>
+  </div>
+</div>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<div class="sec" id="s-hero">
+  <div class="card"><div class="card-h">Hero Section</div>
+    <div class="gr2">
+      <div class="fg"><label class="fl">Eyebrow Tag</label><input class="fi" id="h-eyebrow" value="Growth Leader · Entrepreneur · Builder"/></div>
+      <div class="fg"><label class="fl">CTA Button 1 Text</label><input class="fi" id="h-cta1" value="Work With Me"/></div>
+    </div>
+    <div class="fg"><label class="fl">Main Headline (HTML OK, use &lt;em&gt; for gold text)</label><textarea class="ft" id="h-headline">I Help African Entrepreneurs &amp; Businesses &lt;em&gt;Grow&lt;/em&gt;</textarea></div>
+    <div class="fg"><label class="fl">Body / Subtext</label><textarea class="ft" id="h-body">Founder of Sash Afrique Ltd. MBA student. Pan-African growth strategist. Based in Accra, Ghana — building ventures, mentoring founders, and creating systems that make African achievement visible and lasting.</textarea></div>
+    <div class="fg"><label class="fl">Hero Photo URL (leave blank to keep current)</label><input class="fi" id="h-photo" placeholder="https://..."/><p class="fh">Public image URL for the hero portrait photo. Google Drive: use https://drive.google.com/uc?export=view&id=FILE_ID</p></div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="save('hero')">Save Hero</button><span class="msg" id="m-hero"></span></div>
+  </div>
+  <div class="card"><div class="card-h">Hero Stats (3 Numbers)</div>
+    <div class="gr3">
+      <div class="fg"><label class="fl">Stat 1 — Number</label><input class="fi" id="h-s1n" value="10K+"/></div>
+      <div class="fg"><label class="fl">Stat 1 — Label</label><input class="fi" id="h-s1l" value="Achievers Celebrated"/></div>
+      <div></div>
+      <div class="fg"><label class="fl">Stat 2 — Number</label><input class="fi" id="h-s2n" value="4K+"/></div>
+      <div class="fg"><label class="fl">Stat 2 — Label</label><input class="fi" id="h-s2l" value="Lives Impacted"/></div>
+      <div></div>
+      <div class="fg"><label class="fl">Stat 3 — Number</label><input class="fi" id="h-s3n" value="54"/></div>
+      <div class="fg"><label class="fl">Stat 3 — Label</label><input class="fi" id="h-s3l" value="Nations in Vision"/></div>
+    </div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="save('stats')">Save Stats</button><span class="msg" id="m-stats"></span></div>
+  </div>
+</div>
+
+<!-- ═══════════════ ABOUT ═══════════════ -->
+<div class="sec" id="s-about">
+  <div class="card"><div class="card-h">About Section — Text</div>
+    <div class="fg"><label class="fl">Section Heading</label><input class="fi" id="ab-heading" value="Strategy. Execution. Lasting Impact."/></div>
+    <div class="fg"><label class="fl">Lead Statement (bold intro)</label><textarea class="ft" id="ab-lead">I believe Africa is the most gifted continent on earth — overflowing with talent, creativity, and entrepreneurial spirit. The challenge has never been potential.</textarea></div>
+    <div class="fg"><label class="fl">Body Paragraph 1</label><textarea class="ft" id="ab-b1">As the Founder of Sash Afrique Ltd, I've spent years building ventures that celebrate African achievement and solve real problems. Through strategy, systems thinking, and hands-on execution, I help organizations close the gap between where they are and where they're capable of going.</textarea></div>
+    <div class="fg"><label class="fl">Body Paragraph 2</label><textarea class="ft" id="ab-b2">I started designing to survive university. I ended up designing a movement. Every stage I speak from, every entrepreneur I mentor, every business I help build — it all serves one long-term mission: to help Africa's achievers step into the fullness of what they were always meant to be.</textarea></div>
+    <div class="fg"><label class="fl">About Photo URL (leave blank to keep current)</label><input class="fi" id="ab-photo" placeholder="https://..."/></div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="save('about')">Save About Text</button><span class="msg" id="m-about"></span></div>
+  </div>
+  <div class="card"><div class="card-h">Values Cards (4 cards)</div>
+    <div class="gr2">
+      <div class="fg"><label class="fl">Card 1 — Title</label><input class="fi" id="ab-v1t" value="Entrepreneurship as Transformation"/></div>
+      <div class="fg"><label class="fl">Card 1 — Description</label><input class="fi" id="ab-v1d" value="Business is the most powerful tool for societal change in Africa."/></div>
+      <div class="fg"><label class="fl">Card 2 — Title</label><input class="fi" id="ab-v2t" value="Pan-African Vision"/></div>
+      <div class="fg"><label class="fl">Card 2 — Description</label><input class="fi" id="ab-v2d" value="54 nations. One vision. A continent rising together."/></div>
+      <div class="fg"><label class="fl">Card 3 — Title</label><input class="fi" id="ab-v3t" value="Systems Over Hustle"/></div>
+      <div class="fg"><label class="fl">Card 3 — Description</label><input class="fi" id="ab-v3d" value="Sustainable growth comes from building the right systems — not working harder."/></div>
+      <div class="fg"><label class="fl">Card 4 — Title</label><input class="fi" id="ab-v4t" value="Creating Lasting Opportunity"/></div>
+      <div class="fg"><label class="fl">Card 4 — Description</label><input class="fi" id="ab-v4d" value="Not charity, but enterprises that generate wealth for generations."/></div>
+    </div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="save('values')">Save Values</button><span class="msg" id="m-values"></span></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SERVICES ═══════════════ -->
+<div class="sec" id="s-svcs">
+  <div class="card"><div class="card-h">What I Do — 3 Service Cards</div>
+    <p class="card-sub">These appear in the "How I Create Value" grid on your website.</p>
+    <div style="border-bottom:1px solid var(--border);padding-bottom:16px;margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px;">Card 01</div>
+      <div class="gr2">
+        <div class="fg"><label class="fl">Title</label><input class="fi" id="sv1-t" value="Entrepreneur & Founder"/></div>
+        <div class="fg"><label class="fl">Number Label</label><input class="fi" id="sv1-n" value="01"/></div>
+      </div>
+      <div class="fg"><label class="fl">Description</label><textarea class="ft" id="sv1-d">Building ventures that solve meaningful problems across Africa. From Sash Afrique's recognition platform to farms and future enterprises — each business is a deliberate brick in a larger pan-African ecosystem.</textarea></div>
+    </div>
+    <div style="border-bottom:1px solid var(--border);padding-bottom:16px;margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px;">Card 02</div>
+      <div class="gr2">
+        <div class="fg"><label class="fl">Title</label><input class="fi" id="sv2-t" value="Growth Leader & Strategist"/></div>
+        <div class="fg"><label class="fl">Number Label</label><input class="fi" id="sv2-n" value="02"/></div>
+      </div>
+      <div class="fg"><label class="fl">Description</label><textarea class="ft" id="sv2-d">Helping founders, SMEs, and executives think bigger, build systems, and scale sustainably. Through strategy, consulting, and practical frameworks tested in the real world — not borrowed from textbooks.</textarea></div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px;">Card 03</div>
+      <div class="gr2">
+        <div class="fg"><label class="fl">Title</label><input class="fi" id="sv3-t" value="Speaker & Thought Leader"/></div>
+        <div class="fg"><label class="fl">Number Label</label><input class="fi" id="sv3-n" value="03"/></div>
+      </div>
+      <div class="fg"><label class="fl">Description</label><textarea class="ft" id="sv3-d">Sharing practical, unfiltered lessons on entrepreneurship, leadership, branding, and growth from stages across Africa. Whether it's a student auditorium, a corporate boardroom, or a continental summit — the content is always real.</textarea></div>
+    </div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="save('services')">Save Services</button><span class="msg" id="m-svcs"></span></div>
+  </div>
+</div>
+
+<!-- ═══════════════ WORK ═══════════════ -->
+<div class="sec" id="s-work">
+  <div class="card"><div class="card-h">Sash Afrique Ltd — Flagship Venture</div>
+    <div class="fg"><label class="fl">Title</label><input class="fi" id="w-sa-title" value="Sash Afrique Ltd"/></div>
+    <div class="fg"><label class="fl">Tag</label><input class="fi" id="w-sa-tag" value="Flagship Venture · Since 2022"/></div>
+    <div class="fg"><label class="fl">Description</label><textarea class="ft" id="w-sa-desc">A recognition platform built to celebrate African achievement at scale. Custom Kente sashes for graduations, ordinations, and milestone moments — turning achievement into a visible, wearable statement of African excellence. Operating across Ghana with a growing continental vision.</textarea></div>
+    <div class="gr3">
+      <div class="fg"><label class="fl">Stat 1 Number</label><input class="fi" id="w-sa-s1n" value="10K+"/></div>
+      <div class="fg"><label class="fl">Stat 1 Label</label><input class="fi" id="w-sa-s1l" value="Achievers Celebrated"/></div>
+      <div></div>
+      <div class="fg"><label class="fl">Stat 2 Number</label><input class="fi" id="w-sa-s2n" value="4K+"/></div>
+      <div class="fg"><label class="fl">Stat 2 Label</label><input class="fi" id="w-sa-s2l" value="Lives Impacted"/></div>
+      <div></div>
+      <div class="fg"><label class="fl">Stat 3 Number</label><input class="fi" id="w-sa-s3n" value="54"/></div>
+      <div class="fg"><label class="fl">Stat 3 Label</label><input class="fi" id="w-sa-s3l" value="Nations in Vision"/></div>
+    </div>
+    <div class="fg"><label class="fl">Website Link</label><input class="fi" id="w-sa-link" value="https://sashafrique.com"/></div>
+    <div class="fg"><label class="fl">Full Story (shown in modal popup)</label><textarea class="ft" style="min-height:140px" id="w-sa-story">It started with a problem no one was solving. African graduates, professionals, and institutions were celebrating their achievements with sashes that carried no cultural weight — foreign symbols on African milestones. In 2022, Nana Boateng founded Sash Afrique Ltd to change that.</textarea></div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="save('work_sash')">Save Sash Afrique</button><span class="msg" id="m-wsash"></span></div>
+  </div>
+  <div class="card"><div class="card-h">EmpowerNext — Initiative</div>
+    <div class="fg"><label class="fl">Title</label><input class="fi" id="w-en-title" value="EmpowerNext"/></div>
+    <div class="fg"><label class="fl">Tag</label><input class="fi" id="w-en-tag" value="Initiative"/></div>
+    <div class="fg"><label class="fl">Description</label><textarea class="ft" id="w-en-desc">A youth entrepreneurship initiative equipping the next generation of African entrepreneurs with the mindset, tools, and frameworks to build sustainable businesses from the ground up.</textarea></div>
+    <div class="fg"><label class="fl">Full Story (modal popup)</label><textarea class="ft" style="min-height:100px" id="w-en-story">Africa's greatest untapped resource is its youth. EmpowerNext is Nana Boateng's initiative to directly address the gap between ambition and execution for young African entrepreneurs.</textarea></div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="save('work_en')">Save EmpowerNext</button><span class="msg" id="m-wen"></span></div>
+  </div>
+  <div class="card"><div class="card-h">Naboat Groupe — Long-Term Vision</div>
+    <div class="fg"><label class="fl">Title</label><input class="fi" id="w-ng-title" value="Naboat Groupe"/></div>
+    <div class="fg"><label class="fl">Tag</label><input class="fi" id="w-ng-tag" value="Long-Term Vision"/></div>
+    <div class="fg"><label class="fl">Description</label><textarea class="ft" id="w-ng-desc">The long-term holding philosophy behind every venture — an interconnected ecosystem of African-built enterprises held together by shared values and a continental mission. Not a company. A conviction.</textarea></div>
+    <div class="fg"><label class="fl">Full Story (modal popup)</label><textarea class="ft" style="min-height:100px" id="w-ng-story">Every enterprise Nana builds connects to something larger. Naboat Groupe is the holding philosophy — not a registered conglomerate (yet), but a clear strategic framework for how every venture fits into a single, long-term pan-African ecosystem.</textarea></div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="save('work_ng')">Save Naboat Groupe</button><span class="msg" id="m-wng"></span></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SPEAKING ═══════════════ -->
+<div class="sec" id="s-speaking">
+  <div class="card"><div class="card-h">Add Speaking Engagement</div>
+    <div class="gr2">
+      <div class="fg"><label class="fl">Year</label><input class="fi" id="sp-year" placeholder="2024"/></div>
+      <div class="fg"><label class="fl">Event Name</label><input class="fi" id="sp-event" placeholder="UPSA Entrepreneurship Summit"/></div>
+    </div>
+    <div class="fg"><label class="fl">Topic / Description</label><textarea class="ft" id="sp-topic" placeholder="What you spoke about..."></textarea></div>
+    <div class="fg"><label class="fl">Location</label><input class="fi" id="sp-loc" placeholder="Accra, Ghana"/></div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="addSpeaking()">Add Speaking Event</button><span class="msg" id="m-speak-add"></span></div>
+  </div>
+  <div class="card"><div class="card-h">All Speaking Engagements</div>
+    <div class="li-wrap" id="speak-list"><div class="empty">No speaking events added yet.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ GALLERY ═══════════════ -->
+<div class="sec" id="s-gallery">
+  <div class="card" style="background:var(--off);border-style:dashed;">
+    <div class="card-h">Add New Photo</div>
+    <div class="gr2">
+      <div class="fg"><label class="fl">Image URL *</label><input class="fi" id="g-url" type="url" placeholder="https://..." oninput="prevImg(this.value)"/><p class="fh">Google Drive: share file publicly → use: https://drive.google.com/uc?export=view&id=FILE_ID</p></div>
+      <div class="fg"><label class="fl">Caption</label><input class="fi" id="g-cap" placeholder="Describe this photo..."/></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+      <div class="prev-box" id="g-prev"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--border);">?</div></div>
+      <button class="btn btn-gold btn-sm" onclick="addPhoto()">Add Photo</button>
+      <span class="msg" id="m-gal-add"></span>
+    </div>
+  </div>
+  <div class="card"><div class="card-h" style="justify-content:space-between;"><span>Gallery Photos</span><span id="gal-badge" style="font-size:11px;color:var(--light);">0 photos</span></div>
+    <div class="gal-grid" id="gal-grid"><div class="empty">No photos yet — add one above.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ BOOK ═══════════════ -->
+<div class="sec" id="s-book">
+  <div class="card"><div class="card-h">Book Section</div>
+    <p class="card-sub">This controls the book section on your website. Fill in your book details here.</p>
+    <div class="gr2">
+      <div class="fg"><label class="fl">Book Title</label><input class="fi" id="bk-title" placeholder="Your book title..."/></div>
+      <div class="fg"><label class="fl">Subtitle / Tagline</label><input class="fi" id="bk-sub" placeholder="Subtitle or tagline..."/></div>
+    </div>
+    <div class="fg"><label class="fl">Cover Image URL</label><input class="fi" id="bk-cover" placeholder="https://..." oninput="prevCover(this.value)"/>
+      <p class="fh">Public URL to your book cover image.</p>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:12px;">
+      <div class="prev-box" id="bk-prev" style="width:80px;height:110px;border-radius:4px;"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--light);">Cover</div></div>
+    </div>
+    <div class="fg"><label class="fl">Description (1–2 paragraphs about the book)</label><textarea class="ft" style="min-height:100px" id="bk-desc" placeholder="Add your book description here. What's it about? Who is it for?"></textarea></div>
+    <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;">
+      <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:10px;">4 Key Bullet Points</div>
+      <div class="gr2">
+        <div class="fg"><label class="fl">Bullet 1</label><input class="fi" id="bk-b1" placeholder="What this book covers..."/></div>
+        <div class="fg"><label class="fl">Bullet 2</label><input class="fi" id="bk-b2" placeholder="Who this book is for..."/></div>
+        <div class="fg"><label class="fl">Bullet 3</label><input class="fi" id="bk-b3" placeholder="What makes it different..."/></div>
+        <div class="fg"><label class="fl">Bullet 4</label><input class="fi" id="bk-b4" placeholder="A key takeaway..."/></div>
+      </div>
+    </div>
+    <div class="gr2">
+      <div class="fg"><label class="fl">Order Button Text</label><input class="fi" id="bk-btn" value="Order Your Copy →"/></div>
+      <div class="fg"><label class="fl">Order Link / Page URL</label><input class="fi" id="bk-link" placeholder="https://... or leave blank for modal form"/></div>
+    </div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="save('book')">Save Book Section</button><span class="msg" id="m-book"></span></div>
+  </div>
+</div>
+
+<!-- ═══════════════ BLOG ═══════════════ -->
+<div class="sec" id="s-blog">
+  <div class="card"><div class="card-h">Add / Draft New Blog Post</div>
+    <div class="gr2">
+      <div class="fg"><label class="fl">Post Title *</label><input class="fi" id="bl-title" placeholder="Your article title..."/></div>
+      <div class="fg"><label class="fl">Category</label>
+        <select class="fi" id="bl-cat" style="cursor:pointer;"><option>Entrepreneurship</option><option>Leadership</option><option>Growth Strategy</option><option>Branding</option><option>Africa</option></select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Subtitle / Teaser</label><input class="fi" id="bl-sub" placeholder="One-line summary..."/></div>
+    <div class="fg"><label class="fl">Read Time</label><input class="fi" id="bl-rt" placeholder="e.g. 6 min read"/></div>
+    <div class="fg"><label class="fl">Cover Background Text (large watermark word, e.g. AFRICA)</label><input class="fi" id="bl-bgtext" placeholder="AFRICA"/></div>
+    <div class="fg"><label class="fl">Article Body (HTML supported)</label><textarea class="ft" style="min-height:200px" id="bl-body" placeholder="Write your article. You can use &lt;p&gt;, &lt;h3&gt;, &lt;strong&gt;, &lt;em&gt; tags..."></textarea></div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="addPost()">Save Post</button><span class="msg" id="m-blog-add"></span></div>
+  </div>
+  <div class="card"><div class="card-h">Published &amp; Draft Posts</div>
+    <div class="li-wrap" id="blog-list"><div class="empty">No posts saved yet.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ EVENTS ═══════════════ -->
+<div class="sec" id="s-events">
+  <div class="card"><div class="card-h">Add Upcoming Event</div>
+    <div class="gr3">
+      <div class="fg"><label class="fl">Month (e.g. MAR)</label><input class="fi" id="ev-month" placeholder="MAR"/></div>
+      <div class="fg"><label class="fl">Day / Year</label><input class="fi" id="ev-day" placeholder="15 or 2025"/></div>
+      <div class="fg"><label class="fl">Event Type</label><input class="fi" id="ev-type" placeholder="Keynote · Summit"/></div>
+    </div>
+    <div class="fg"><label class="fl">Event Title</label><input class="fi" id="ev-title" placeholder="Event name..."/></div>
+    <div class="fg"><label class="fl">Description</label><textarea class="ft" id="ev-desc" placeholder="What happens at this event..."></textarea></div>
+    <div class="gr2">
+      <div class="fg"><label class="fl">Location</label><input class="fi" id="ev-loc" placeholder="Accra, Ghana · TBC"/></div>
+      <div class="fg"><label class="fl">Format</label><input class="fi" id="ev-format" placeholder="In-person / Online / Hybrid"/></div>
+    </div>
+    <div class="fg"><label class="fl">CTA Link Text</label><input class="fi" id="ev-cta" placeholder="Register Interest →"/></div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="addEvent()">Add Event</button><span class="msg" id="m-ev-add"></span></div>
+  </div>
+  <div class="card"><div class="card-h">Upcoming Events</div>
+    <div class="li-wrap" id="ev-list"><div class="empty">No events added yet.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ TESTIMONIALS ═══════════════ -->
+<div class="sec" id="s-testimonials">
+  <div class="card"><div class="card-h">Add Testimonial / Review</div>
+    <div class="fg"><label class="fl">Quote (the review text)</label><textarea class="ft" id="ts-quote" placeholder="Paste the Google review or testimonial text here..."></textarea></div>
+    <div class="gr2">
+      <div class="fg"><label class="fl">Reviewer Name</label><input class="fi" id="ts-name" placeholder="John Mensah"/></div>
+      <div class="fg"><label class="fl">Role / Source</label><input class="fi" id="ts-role" placeholder="Google Review · ⭐⭐⭐⭐⭐"/></div>
+    </div>
+    <div class="fg"><label class="fl">Star Rating</label>
+      <select class="fi" id="ts-stars" style="cursor:pointer;"><option value="5">★★★★★ 5 stars</option><option value="4">★★★★☆ 4 stars</option><option value="3">★★★☆☆ 3 stars</option></select>
+    </div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="addTestimonial()">Add Testimonial</button><span class="msg" id="m-testi-add"></span></div>
+  </div>
+  <div class="card"><div class="card-h">Testimonials &amp; Reviews</div>
+    <div class="li-wrap" id="testi-list"><div class="empty">No testimonials yet. Add real Google reviews above.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ CONTACT & FOOTER ═══════════════ -->
+<div class="sec" id="s-contact">
+  <div class="card"><div class="card-h">Contact Section</div>
+    <div class="fg"><label class="fl">Section Heading</label><input class="fi" id="ct-heading" value="Let's Build Something Real"/></div>
+    <div class="fg"><label class="fl">Intro Paragraph</label><textarea class="ft" id="ct-lead">Whether you want to explore a strategy partnership, book a speaking engagement, or collaborate on something that moves Africa forward — this is where it starts.</textarea></div>
+    <div class="gr2">
+      <div class="fg"><label class="fl">Email Address</label><input class="fi" id="ct-email" value="hello@nanaboateng.com"/></div>
+      <div class="fg"><label class="fl">WhatsApp Number (with country code)</label><input class="fi" id="ct-wa" value="+233 53 882 0081"/></div>
+    </div>
+    <div class="fg"><label class="fl">Location Text</label><input class="fi" id="ct-loc" value="Accra, Ghana · Available Africa-wide"/></div>
+    <div class="fg"><label class="fl">Formspree Endpoint (for contact form)</label><input class="fi" id="ct-form" placeholder="https://formspree.io/f/YOUR_ID"/><p class="fh">Create a free form at formspree.io and paste the endpoint URL here. This makes your contact form send emails.</p></div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="save('contact')">Save Contact</button><span class="msg" id="m-ct"></span></div>
+  </div>
+  <div class="card"><div class="card-h">Footer</div>
+    <div class="fg"><label class="fl">Brand Tagline (footer description)</label><textarea class="ft" id="ft-tagline">Building businesses that matter in Africa while helping founders, executives, and organizations grow with intention.</textarea></div>
+    <div class="fg"><label class="fl">Copyright Text</label><input class="fi" id="ft-copy" value="© 2025 Nana Boateng · Naboat54 · Sash Afrique Ltd · Accra, Ghana"/></div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="save('footer')">Save Footer</button><span class="msg" id="m-ft"></span></div>
+  </div>
+  <div class="card"><div class="card-h">Social Media Links</div>
+    <div class="gr2">
+      <div class="fg"><label class="fl">LinkedIn URL</label><input class="fi" id="sc-li" value="https://www.linkedin.com/in/naboat54"/></div>
+      <div class="fg"><label class="fl">Instagram URL</label><input class="fi" id="sc-ig" value="https://www.instagram.com/naboat54/"/></div>
+      <div class="fg"><label class="fl">X / Twitter URL</label><input class="fi" id="sc-x" value="https://x.com/Naboat54"/></div>
+      <div class="fg"><label class="fl">Facebook URL</label><input class="fi" id="sc-fb" value="https://web.facebook.com/naboat54/"/></div>
+      <div class="fg"><label class="fl">YouTube URL</label><input class="fi" id="sc-yt" value="https://www.youtube.com/@nanaboatenggrowth"/></div>
+      <div class="fg"><label class="fl">TikTok URL</label><input class="fi" id="sc-tt" value="https://www.tiktok.com/@naboat54"/></div>
+    </div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="save('social')">Save Social Links</button><span class="msg" id="m-sc"></span></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SETTINGS ═══════════════ -->
+<div class="sec" id="s-settings">
+  <div class="card"><div class="card-h">Google Sheets Connection</div>
+    <div class="conn"><div class="dot" id="dot"></div><span id="conn-lbl" style="font-size:12px;color:var(--mid);">Not configured</span></div>
+    <div class="fg"><label class="fl">Apps Script Web App URL</label>
+      <div style="display:flex;gap:7px;">
+        <input class="fi" style="flex:1" type="url" id="as-url" placeholder="https://script.google.com/macros/s/..."/>
+        <button class="btn btn-out btn-sm" onclick="testConn()">Test</button>
+      </div>
+      <p class="fh">Paste the URL from your deployed Google Apps Script. See guide below.</p>
+    </div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="saveUrl()">Save URL</button></div>
+  </div>
+
+  <div class="card"><div class="card-h">Setup Guide — 4 Steps</div>
+    <ol class="steps">
+      <li><p><strong>Create a Google Sheet</strong> — go to <a href="https://sheets.google.com" target="_blank" style="color:var(--gold)">sheets.google.com</a>, create a new spreadsheet. Name it "Nana Boateng Website".</p></li>
+      <li><p><strong>Open Apps Script</strong> — inside the spreadsheet click <strong>Extensions → Apps Script</strong>. A code editor opens.</p></li>
+      <li><p><strong>Paste the code below</strong>, replacing everything in the editor. Click Save (Ctrl+S).</p></li>
+      <li><p><strong>Deploy → New Deployment → Web App</strong>. Set "Execute as: Me" and "Who has access: Anyone". Click Deploy. Copy the web app URL and paste it above.</p></li>
+    </ol>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyCode()">Copy</button><pre id="as-code">const SS = SpreadsheetApp.getActiveSpreadsheet();
+
+function doGet(e) {
+  const r = { content:{}, gallery:[], blog:[], speaking:[], events:[], testimonials:[] };
+  try{ const s=SS.getSheetByName('Content'); if(s&&s.getLastRow()>0) s.getDataRange().getValues().forEach(row=>{ if(row[0]) r.content[row[0]]=row[1]||''; }); }catch(e){}
+  try{ const s=SS.getSheetByName('Gallery'); if(s&&s.getLastRow()>1){ const d=s.getDataRange().getValues(); for(let i=1;i<d.length;i++) if(d[i][1]) r.gallery.push({id:d[i][0],url:d[i][1],caption:d[i][2]||'',date:d[i][3]||''}); }}catch(e){}
+  try{ const s=SS.getSheetByName('Blog'); if(s&&s.getLastRow()>1){ const d=s.getDataRange().getValues(); for(let i=1;i<d.length;i++) if(d[i][1]) r.blog.push({id:d[i][0],title:d[i][1],subtitle:d[i][2],category:d[i][3],body:d[i][4],readTime:d[i][5],bgText:d[i][6],date:d[i][7]}); }}catch(e){}
+  try{ const s=SS.getSheetByName('Speaking'); if(s&&s.getLastRow()>1){ const d=s.getDataRange().getValues(); for(let i=1;i<d.length;i++) if(d[i][1]) r.speaking.push({id:d[i][0],year:d[i][1],event:d[i][2],topic:d[i][3],location:d[i][4]}); }}catch(e){}
+  try{ const s=SS.getSheetByName('Events'); if(s&&s.getLastRow()>1){ const d=s.getDataRange().getValues(); for(let i=1;i<d.length;i++) if(d[i][1]) r.events.push({id:d[i][0],month:d[i][1],day:d[i][2],type:d[i][3],title:d[i][4],desc:d[i][5],location:d[i][6],format:d[i][7],cta:d[i][8]}); }}catch(e){}
+  try{ const s=SS.getSheetByName('Testimonials'); if(s&&s.getLastRow()>1){ const d=s.getDataRange().getValues(); for(let i=1;i<d.length;i++) if(d[i][1]) r.testimonials.push({id:d[i][0],quote:d[i][1],name:d[i][2],role:d[i][3],stars:d[i][4]}); }}catch(e){}
+  return ContentService.createTextOutput(JSON.stringify(r)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  const d = JSON.parse(e.postData.contents);
+  if(d.action==='updateContent'){ let s=SS.getSheetByName('Content')||SS.insertSheet('Content'); const v=s.getLastRow()>0?s.getDataRange().getValues():[]; let f=false; for(let i=0;i<v.length;i++){ if(v[i][0]===d.key){s.getRange(i+1,2).setValue(d.value);f=true;break;} } if(!f)s.appendRow([d.key,d.value]); }
+  if(d.action==='addGallery'){ let s=SS.getSheetByName('Gallery'); if(!s){s=SS.insertSheet('Gallery');s.appendRow(['ID','URL','Caption','Date']);} const id=Date.now().toString(); s.appendRow([id,d.url,d.caption||'',new Date().toISOString()]); return ContentService.createTextOutput(JSON.stringify({success:true,id})).setMimeType(ContentService.MimeType.JSON); }
+  if(d.action==='removeGallery'){ const s=SS.getSheetByName('Gallery'); if(s){const v=s.getDataRange().getValues();for(let i=1;i<v.length;i++){if(v[i][0]===d.id){s.deleteRow(i+1);break;}}} }
+  if(d.action==='addBlog'){ let s=SS.getSheetByName('Blog'); if(!s){s=SS.insertSheet('Blog');s.appendRow(['ID','Title','Subtitle','Category','Body','ReadTime','BgText','Date']);} const id='post-'+Date.now(); s.appendRow([id,d.title,d.subtitle||'',d.category||'',d.body||'',d.readTime||'',d.bgText||'',new Date().toISOString()]); return ContentService.createTextOutput(JSON.stringify({success:true,id})).setMimeType(ContentService.MimeType.JSON); }
+  if(d.action==='removeBlog'){ const s=SS.getSheetByName('Blog'); if(s){const v=s.getDataRange().getValues();for(let i=1;i<v.length;i++){if(v[i][0]===d.id){s.deleteRow(i+1);break;}}} }
+  if(d.action==='addSpeaking'){ let s=SS.getSheetByName('Speaking'); if(!s){s=SS.insertSheet('Speaking');s.appendRow(['ID','Year','Event','Topic','Location']);} const id='sp-'+Date.now(); s.appendRow([id,d.year,d.event,d.topic||'',d.location||'']); return ContentService.createTextOutput(JSON.stringify({success:true,id})).setMimeType(ContentService.MimeType.JSON); }
+  if(d.action==='removeSpeaking'){ const s=SS.getSheetByName('Speaking'); if(s){const v=s.getDataRange().getValues();for(let i=1;i<v.length;i++){if(v[i][0]===d.id){s.deleteRow(i+1);break;}}} }
+  if(d.action==='addEvent'){ let s=SS.getSheetByName('Events'); if(!s){s=SS.insertSheet('Events');s.appendRow(['ID','Month','Day','Type','Title','Desc','Location','Format','CTA']);} const id='ev-'+Date.now(); s.appendRow([id,d.month,d.day,d.type||'',d.title,d.desc||'',d.location||'',d.format||'',d.cta||'']); return ContentService.createTextOutput(JSON.stringify({success:true,id})).setMimeType(ContentService.MimeType.JSON); }
+  if(d.action==='removeEvent'){ const s=SS.getSheetByName('Events'); if(s){const v=s.getDataRange().getValues();for(let i=1;i<v.length;i++){if(v[i][0]===d.id){s.deleteRow(i+1);break;}}} }
+  if(d.action==='addTestimonial'){ let s=SS.getSheetByName('Testimonials'); if(!s){s=SS.insertSheet('Testimonials');s.appendRow(['ID','Quote','Name','Role','Stars']);} const id='ts-'+Date.now(); s.appendRow([id,d.quote,d.name||'',d.role||'',d.stars||5]); return ContentService.createTextOutput(JSON.stringify({success:true,id})).setMimeType(ContentService.MimeType.JSON); }
+  if(d.action==='removeTestimonial'){ const s=SS.getSheetByName('Testimonials'); if(s){const v=s.getDataRange().getValues();for(let i=1;i<v.length;i++){if(v[i][0]===d.id){s.deleteRow(i+1);break;}}} }
+  return ContentService.createTextOutput(JSON.stringify({success:true})).setMimeType(ContentService.MimeType.JSON);
+}</pre></div>
+  </div>
+
+  <div class="card"><div class="card-h">Change Admin Password</div>
+    <div class="gr2">
+      <div class="fg"><label class="fl">New Password</label><input class="fi" type="password" id="pw-new" placeholder="New password"/></div>
+      <div class="fg"><label class="fl">Confirm Password</label><input class="fi" type="password" id="pw-cf" placeholder="Confirm"/></div>
+    </div>
+    <div class="save-row"><button class="btn btn-gold btn-sm" onclick="changePw()">Update Password</button><span class="msg" id="m-pw"></span></div>
+  </div>
+
+  <div class="card" style="border-color:#fde68a;background:#fffbeb;"><div class="card-h">⚠ Danger Zone</div>
+    <p style="font-size:12px;color:var(--mid);margin-bottom:10px;">Clear all locally cached admin data (does not delete your Google Sheet).</p>
+    <button class="btn btn-red btn-sm" onclick="clearLocal()">Clear Local Cache</button>
+  </div>
+</div>
+
+    </div><!-- /.mb -->
+  </div><!-- /#main -->
+</div><!-- /#app -->
+
+<div id="toast"></div>
+
+<script>
+// ═══ UTILS (must be first) ═══════════════════════════════════════════
+const G = id => document.getElementById(id);
+const V = id => (G(id) || {}).value?.trim() || '';
+const e = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const ls = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+const J = (s, def='{}') => { try { return JSON.parse(s||def); } catch { return JSON.parse(def); } };
+function msg(el, txt) { if(!el) return; el.textContent=txt; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3000); }
+function toast(t) { const el=G('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3200); }
+
+// ═══ STATE ═══════════════════════════════════════════════════════════
+const DEF_PW = 'naboat2024';
+let SU='', C={}, GAL=[], BLOG=[], SPEAK=[], EVTS=[], TESTI=[];
+
+// ═══ AUTH ════════════════════════════════════════════════════════════
+function login() {
+  const pw = G('lpw').value.trim();
+  const stored = localStorage.getItem('nb_pw') || btoa(DEF_PW);
+  if (btoa(pw) === stored) {
+    G('login').style.display = 'none';
+    G('app').style.display = 'block';
+    init();
+  } else {
+    G('lerr').style.display = 'block';
+  }
+}
+function logout() {
+  G('app').style.display = 'none';
+  G('login').style.display = 'flex';
+  G('lpw').value = '';
+}
+function changePw() {
+  const n = V('pw-new'), c = V('pw-cf'), m = G('m-pw');
+  if (!n) { msg(m,'Enter a password.'); return; }
+  if (n !== c) { msg(m,'Passwords do not match.'); return; }
+  localStorage.setItem('nb_pw', btoa(n));
+  msg(m,'Password updated ✓');
+}
+
+// ═══ NAV ══════════════════════════════════════════════════════════════
+const TITLES = {
+  dash:'Dashboard', hero:'Hero Section', about:'About Section',
+  svcs:'Services (What I Do)', work:'Featured Work', speaking:'Speaking',
+  gallery:'Gallery', book:'Book', blog:'Blog / Insights',
+  events:'Events', testimonials:'Testimonials', contact:'Contact & Footer',
+  settings:'Settings'
+};
+function go(id, btn) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('on'));
+  const sec = G('s-'+id);
+  if (sec) sec.classList.add('on');
+  if (btn) btn.classList.add('on');
+  G('pt').textContent = TITLES[id] || id;
+}
+function qb(id) { return document.querySelector('[data-s="'+id+'"]'); }
+
+// ═══ INIT ═════════════════════════════════════════════════════════════
+function init() {
+  SU = localStorage.getItem('nb_su') || '';
+  if (SU) G('as-url').value = SU;
+  C = J(localStorage.getItem('nb_c'));
+  GAL = J(localStorage.getItem('nb_gal'), '[]');
+  BLOG = J(localStorage.getItem('nb_blog'), '[]');
+  SPEAK = J(localStorage.getItem('nb_speak'), '[]');
+  EVTS = J(localStorage.getItem('nb_ev'), '[]');
+  TESTI = J(localStorage.getItem('nb_ts'), '[]');
+  applyContent(C);
+  renderGal(); renderBlog(); renderSpeak(); renderEv(); renderTesti();
+  updateDash();
+  checkConn();
+  if (!SU) {
+    G('setup-wrap').innerHTML = '<div class="setup-bar"><h3>👋 Welcome! Connect Google Sheets first</h3><p>Go to Settings and follow the 4-step guide to link your website to a live Google Sheet. Takes ~5 minutes, free forever.</p><button class="btn btn-gold btn-sm" onclick="go(\'settings\',qb(\'settings\'))">Open Settings →</button></div>';
+  }
+}
+
+// ═══ CONTENT MAP ══════════════════════════════════════════════════════
+const FIELDS = {
+  hero:       ['h-eyebrow','h-cta1','h-headline','h-body','h-photo'],
+  stats:      ['h-s1n','h-s1l','h-s2n','h-s2l','h-s3n','h-s3l'],
+  about:      ['ab-heading','ab-lead','ab-b1','ab-b2','ab-photo'],
+  values:     ['ab-v1t','ab-v1d','ab-v2t','ab-v2d','ab-v3t','ab-v3d','ab-v4t','ab-v4d'],
+  svcs:       ['sv1-t','sv1-n','sv1-d','sv2-t','sv2-n','sv2-d','sv3-t','sv3-n','sv3-d'],
+  work_sash:  ['w-sa-title','w-sa-tag','w-sa-desc','w-sa-s1n','w-sa-s1l','w-sa-s2n','w-sa-s2l','w-sa-s3n','w-sa-s3l','w-sa-link','w-sa-story'],
+  work_en:    ['w-en-title','w-en-tag','w-en-desc','w-en-story'],
+  work_ng:    ['w-ng-title','w-ng-tag','w-ng-desc','w-ng-story'],
+  book:       ['bk-title','bk-sub','bk-cover','bk-desc','bk-b1','bk-b2','bk-b3','bk-b4','bk-btn','bk-link'],
+  contact:    ['ct-heading','ct-lead','ct-email','ct-wa','ct-loc','ct-form'],
+  footer:     ['ft-tagline','ft-copy'],
+  social:     ['sc-li','sc-ig','sc-x','sc-fb','sc-yt','sc-tt']
+};
+
+function applyContent(c) {
+  for (const [sec, ids] of Object.entries(FIELDS)) {
+    ids.forEach(id => {
+      if (c[id] !== undefined) { const el = G(id); if (el) el.value = c[id]; }
+    });
+  }
+}
+
+async function save(sec) {
+  const ids = FIELDS[sec] || [];
+  const updates = {};
+  ids.forEach(id => { const el = G(id); if (el) { updates[id] = el.value; C[id] = el.value; } });
+  ls('nb_c', C);
+  // Find the message element for this section
+  const msgIds = {
+    hero:'m-hero', stats:'m-stats', about:'m-about', values:'m-values',
+    svcs:'m-svcs', work_sash:'m-wsash', work_en:'m-wen', work_ng:'m-wng',
+    book:'m-book', contact:'m-ct', footer:'m-ft', social:'m-sc'
+  };
+  const mEl = G(msgIds[sec]);
+  if (SU) {
+    try {
+      for (const [k, v] of Object.entries(updates)) await api({action:'updateContent', key:k, value:v});
+      msg(mEl, 'Saved & synced ✓');
+    } catch { msg(mEl, 'Saved locally (sync failed)'); }
+  } else {
+    msg(mEl, 'Saved locally ✓');
+  }
+  toast('Saved!');
+}
+
+// ═══ GALLERY ══════════════════════════════════════════════════════════
+function prevImg(u) {
+  const b = G('g-prev');
+  b.innerHTML = u ? `<img src="${e(u)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--border)">?</div>';
+}
+function prevCover(u) {
+  const b = G('bk-prev');
+  b.innerHTML = u ? `<img src="${e(u)}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--light)">Cover</div>';
+}
+async function addPhoto() {
+  const url = V('g-url'), cap = V('g-cap');
+  if (!url) { toast('Enter an image URL.'); return; }
+  const item = {id: Date.now().toString(), url, caption: cap, date: new Date().toISOString()};
+  if (SU) { try { const r = await api({action:'addGallery', url, caption: cap}); if (r.id) item.id = r.id; } catch {} }
+  GAL.push(item); ls('nb_gal', GAL); renderGal(); updateDash();
+  G('g-url').value=''; G('g-cap').value=''; prevImg('');
+  msg(G('m-gal-add'), 'Added ✓'); toast('Photo added!');
+}
+async function delPhoto(id) {
+  if (!confirm('Remove this photo?')) return;
+  GAL = GAL.filter(i => i.id !== id); ls('nb_gal', GAL); renderGal(); updateDash();
+  if (SU) try { await api({action:'removeGallery', id}); } catch {}
+  toast('Photo removed.');
+}
+function renderGal() {
+  const g = G('gal-grid');
+  G('gal-badge').textContent = GAL.length + ' photo' + (GAL.length !== 1 ? 's' : '');
+  if (!GAL.length) { g.innerHTML = '<div class="empty">No photos yet — add one above.</div>'; return; }
+  g.innerHTML = GAL.map(i => `<div class="gal-item"><img src="${e(i.url)}" alt="${e(i.caption)}" loading="lazy" onerror="this.style.display='none'"><div class="gal-cap">${e(i.caption||'')}</div><button class="gal-del" onclick="delPhoto('${e(i.id)}')" title="Remove"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');
+}
+
+// ═══ BLOG ═════════════════════════════════════════════════════════════
+async function addPost() {
+  const title = V('bl-title');
+  if (!title) { toast('Enter a title.'); return; }
+  const post = {id:'post-'+Date.now(), title, subtitle:V('bl-sub'), category:V('bl-cat'), body:V('bl-body'), readTime:V('bl-rt'), bgText:V('bl-bgtext'), date:new Date().toISOString()};
+  if (SU) { try { const r = await api({action:'addBlog', ...post}); if (r.id) post.id = r.id; } catch {} }
+  BLOG.push(post); ls('nb_blog', BLOG); renderBlog(); updateDash();
+  ['bl-title','bl-sub','bl-body','bl-rt','bl-bgtext'].forEach(id => G(id).value = '');
+  msg(G('m-blog-add'), 'Saved ✓'); toast('Blog post saved!');
+}
+async function delPost(id) {
+  if (!confirm('Delete this post?')) return;
+  BLOG = BLOG.filter(p => p.id !== id); ls('nb_blog', BLOG); renderBlog(); updateDash();
+  if (SU) try { await api({action:'removeBlog', id}); } catch {}
+  toast('Post deleted.');
+}
+function renderBlog() {
+  const el = G('blog-list');
+  if (!BLOG.length) { el.innerHTML = '<div class="empty">No posts saved yet.</div>'; return; }
+  el.innerHTML = BLOG.map(p => `<div class="li"><div class="li-info"><div class="li-title">${e(p.title)}</div><div class="li-meta">${e(p.category||'')} · ${p.date ? new Date(p.date).toLocaleDateString() : ''}</div></div><div class="li-actions"><button class="btn btn-red btn-xs" onclick="delPost('${e(p.id)}')">Delete</button></div></div>`).join('');
+}
+
+// ═══ SPEAKING ════════════════════════════════════════════════════════
+async function addSpeaking() {
+  const event = V('sp-event');
+  if (!event) { toast('Enter event name.'); return; }
+  const item = {id:'sp-'+Date.now(), year:V('sp-year'), event, topic:V('sp-topic'), location:V('sp-loc')};
+  if (SU) { try { const r = await api({action:'addSpeaking', ...item}); if (r.id) item.id = r.id; } catch {} }
+  SPEAK.push(item); ls('nb_speak', SPEAK); renderSpeak(); updateDash();
+  ['sp-year','sp-event','sp-topic','sp-loc'].forEach(id => G(id).value = '');
+  msg(G('m-speak-add'), 'Added ✓'); toast('Speaking event added!');
+}
+async function delSpeak(id) {
+  if (!confirm('Remove this speaking event?')) return;
+  SPEAK = SPEAK.filter(s => s.id !== id); ls('nb_speak', SPEAK); renderSpeak(); updateDash();
+  if (SU) try { await api({action:'removeSpeaking', id}); } catch {}
+  toast('Removed.');
+}
+function renderSpeak() {
+  const el = G('speak-list');
+  if (!SPEAK.length) { el.innerHTML = '<div class="empty">No speaking events yet.</div>'; return; }
+  el.innerHTML = [...SPEAK].reverse().map(s => `<div class="li"><div class="li-info"><div class="li-title">${e(s.year||'')} — ${e(s.event)}</div><div class="li-meta">${e(s.location||'')}${s.topic ? ' · ' + s.topic.slice(0,70) : ''}</div></div><div class="li-actions"><button class="btn btn-red btn-xs" onclick="delSpeak('${e(s.id)}')">Remove</button></div></div>`).join('');
+}
+
+// ═══ EVENTS ══════════════════════════════════════════════════════════
+async function addEvent() {
+  const title = V('ev-title');
+  if (!title) { toast('Enter event title.'); return; }
+  const item = {id:'ev-'+Date.now(), month:V('ev-month'), day:V('ev-day'), type:V('ev-type'), title, desc:V('ev-desc'), location:V('ev-loc'), format:V('ev-format'), cta:V('ev-cta')};
+  if (SU) { try { const r = await api({action:'addEvent', ...item}); if (r.id) item.id = r.id; } catch {} }
+  EVTS.push(item); ls('nb_ev', EVTS); renderEv(); updateDash();
+  ['ev-month','ev-day','ev-type','ev-title','ev-desc','ev-loc','ev-format','ev-cta'].forEach(id => G(id).value = '');
+  msg(G('m-ev-add'), 'Added ✓'); toast('Event added!');
+}
+async function delEv(id) {
+  if (!confirm('Remove this event?')) return;
+  EVTS = EVTS.filter(ev => ev.id !== id); ls('nb_ev', EVTS); renderEv(); updateDash();
+  if (SU) try { await api({action:'removeEvent', id}); } catch {}
+  toast('Event removed.');
+}
+function renderEv() {
+  const el = G('ev-list');
+  if (!EVTS.length) { el.innerHTML = '<div class="empty">No events yet.</div>'; return; }
+  el.innerHTML = [...EVTS].reverse().map(ev => `<div class="li"><div class="li-info"><div class="li-title">${e(ev.month||'')} ${e(ev.day||'')} — ${e(ev.title)}</div><div class="li-meta">${e(ev.type||'')}${ev.location ? ' · '+ev.location : ''}</div></div><div class="li-actions"><button class="btn btn-red btn-xs" onclick="delEv('${e(ev.id)}')">Remove</button></div></div>`).join('');
+}
+
+// ═══ TESTIMONIALS ════════════════════════════════════════════════════
+async function addTestimonial() {
+  const quote = V('ts-quote');
+  if (!quote) { toast('Enter the review text.'); return; }
+  const item = {id:'ts-'+Date.now(), quote, name:V('ts-name'), role:V('ts-role'), stars:V('ts-stars')};
+  if (SU) { try { const r = await api({action:'addTestimonial', ...item}); if (r.id) item.id = r.id; } catch {} }
+  TESTI.push(item); ls('nb_ts', TESTI); renderTesti(); updateDash();
+  ['ts-quote','ts-name','ts-role'].forEach(id => G(id).value = '');
+  msg(G('m-testi-add'), 'Added ✓'); toast('Testimonial added!');
+}
+async function delTesti(id) {
+  if (!confirm('Remove this testimonial?')) return;
+  TESTI = TESTI.filter(t => t.id !== id); ls('nb_ts', TESTI); renderTesti(); updateDash();
+  if (SU) try { await api({action:'removeTestimonial', id}); } catch {}
+  toast('Removed.');
+}
+function renderTesti() {
+  const el = G('testi-list');
+  if (!TESTI.length) { el.innerHTML = '<div class="empty">No testimonials yet. Paste real Google reviews above.</div>'; return; }
+  el.innerHTML = [...TESTI].reverse().map(t => `<div class="li"><div class="li-info"><div class="li-title">${'★'.repeat(Math.min(parseInt(t.stars)||5,5))} ${e(t.name||'Reviewer')}</div><div class="li-meta">${e(t.role||'')} &mdash; "${e((t.quote||'').slice(0,80))}..."</div></div><div class="li-actions"><button class="btn btn-red btn-xs" onclick="delTesti('${e(t.id)}')">Remove</button></div></div>`).join('');
+}
+
+// ═══ DASHBOARD ════════════════════════════════════════════════════════
+function updateDash() {
+  G('ds-gal').textContent   = GAL.length;
+  G('ds-blog').textContent  = BLOG.length;
+  G('ds-speak').textContent = SPEAK.length;
+  G('ds-testi').textContent = TESTI.length;
+  G('ds-events').textContent= EVTS.length;
+}
+
+// ═══ CONNECTION ════════════════════════════════════════════════════════
+async function checkConn() {
+  const dot=G('dot'), lbl=G('conn-lbl'), st=G('ds-conn');
+  if (!SU) { dot.className='dot'; lbl.textContent='Not configured'; st.textContent='–'; return; }
+  dot.className='dot chk'; lbl.textContent='Checking...';
+  try {
+    const r = await fetch(SU); const d = await r.json();
+    dot.className='dot ok'; lbl.textContent='Connected to Google Sheets ✓'; st.textContent='Live';
+    if (d.gallery?.length)      { GAL=d.gallery;   ls('nb_gal',GAL);   renderGal(); }
+    if (d.blog?.length)         { BLOG=d.blog;      ls('nb_blog',BLOG); renderBlog(); }
+    if (d.speaking?.length)     { SPEAK=d.speaking; ls('nb_speak',SPEAK); renderSpeak(); }
+    if (d.events?.length)       { EVTS=d.events;    ls('nb_ev',EVTS);   renderEv(); }
+    if (d.testimonials?.length) { TESTI=d.testimonials; ls('nb_ts',TESTI); renderTesti(); }
+    if (d.content && Object.keys(d.content).length) { C={...C,...d.content}; ls('nb_c',C); applyContent(C); }
+    updateDash();
+  } catch { dot.className='dot err'; lbl.textContent='Connection failed — check URL'; st.textContent='Error'; }
+}
+async function testConn() {
+  const url = V('as-url'); if (!url) { toast('Enter the URL first.'); return; }
+  SU = url; await checkConn();
+}
+function saveUrl() {
+  SU = V('as-url'); if (!SU) { toast('Enter a URL.'); return; }
+  localStorage.setItem('nb_su', SU); toast('URL saved — testing connection...'); checkConn();
+}
+
+// ═══ SYNC ═════════════════════════════════════════════════════════════
+async function syncAll() {
+  if (!SU) { toast('Set up Google Sheets in Settings first.'); return; }
+  const btn = G('sync-btn'); btn.textContent = 'Syncing...'; btn.disabled = true;
+  try {
+    for (const [k, v] of Object.entries(C)) await api({action:'updateContent', key:k, value:v});
+    G('sync-time').textContent = 'Synced ' + new Date().toLocaleTimeString();
+    toast('All changes pushed to website! ✓');
+  } catch { toast('Sync failed — check your connection.'); }
+  btn.textContent = '↑ Sync to Website'; btn.disabled = false;
+}
+async function pullFromSheets() {
+  if (!SU) { toast('No Sheets URL configured.'); return; }
+  toast('Pulling latest data...');
+  await checkConn();
+  toast('Data refreshed!');
+}
+
+// ═══ API ════════════════════════════════════════════════════════════
+async function api(payload) {
+  const r = await fetch(SU, {method:'POST', body: JSON.stringify(payload)});
+  return r.json();
+}
+
+// ═══ MISC ═══════════════════════════════════════════════════════════
+function copyCode() { navigator.clipboard.writeText(G('as-code').innerText).then(() => toast('Code copied!')); }
+function clearLocal() {
+  if (!confirm('Clear local cache? This does not delete your Google Sheet.')) return;
+  ['nb_c','nb_gal','nb_blog','nb_speak','nb_ev','nb_ts'].forEach(k => localStorage.removeItem(k));
+  C={}; GAL=[]; BLOG=[]; SPEAK=[]; EVTS=[]; TESTI=[];
+  applyContent({}); renderGal(); renderBlog(); renderSpeak(); renderEv(); renderTesti(); updateDash();
+  toast('Cache cleared.');
+}
+
+// ═══ BOOT ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+  G('lpw').addEventListener('keydown', function(ev) { if (ev.key === 'Enter') login(); });
+});
+</script>
+</body>
+</html>
